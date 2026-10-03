@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>QA Agent Workbench</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'self'">
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1b1f24;--mu:#667085;--bd:#e3e6eb;--ac:#2f6df6;--ok:#12805c;--no:#c0392b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14161a;--card:#1d2026;--tx:#eceef2;--mu:#98a1b0;--bd:#2d323b;--ac:#6f9bff;--ok:#3ecf9b;--no:#ff7b6b}}
+:root[data-theme="dark"]{--bg:#14161a;--card:#1d2026;--tx:#eceef2;--mu:#98a1b0;--bd:#2d323b;--ac:#6f9bff;--ok:#3ecf9b;--no:#ff7b6b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:860px;margin:0 auto;padding:16px}
+h1{font-size:20px;margin:0}.sub{color:var(--mu);margin:2px 0 14px;font-size:13px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:12px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px;text-align:center}
+.stat b{display:block;font-size:18px}.stat span{font-size:11px;color:var(--mu)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:6px}
+.chip{flex:none;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer}
+.chip.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.steps{display:flex;gap:4px;margin:8px 0 12px;overflow-x:auto}
+.step{flex:1;min-width:76px;text-align:center;font-size:11px;padding:5px 2px;border-radius:6px;background:var(--bg);color:var(--mu);border:1px solid var(--bd)}
+.step.on{background:var(--ac);color:#fff;border-color:var(--ac)}.step.done{color:var(--ok);border-color:var(--ok)}
+textarea{width:100%;min-height:130px;border:1px solid var(--bd);border-radius:8px;padding:10px;background:var(--bg);color:var(--tx);font:13px/1.5 ui-monospace,Menlo,monospace;resize:vertical}
+button.b{border:0;border-radius:8px;padding:9px 14px;font-size:14px;cursor:pointer;background:var(--ac);color:#fff}
+button.b.g{background:var(--bg);color:var(--tx);border:1px solid var(--bd)}button.b.ok{background:var(--ok)}button.b.no{background:var(--no)}
+button:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.lbl{font-size:12px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.04em;margin:12px 0 4px}
+.hint{font-size:13px;color:var(--mu)}.warn{background:#fff6e0;color:#6b4a00;border-radius:8px;padding:8px 10px;font-size:13px;margin-top:8px}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .warn{background:#3a3016;color:#f3d98b}}
+.lesson{font-size:13px;border-left:3px solid var(--ac);padding:2px 8px;margin:4px 0}
+.hide{display:none}
+select.t,input.t{width:100%;border:1px solid var(--bd);border-radius:8px;padding:9px;background:var(--bg);color:var(--tx);font-size:14px}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:10px}.tw{overflow-x:auto}
+table.t{width:100%;border-collapse:collapse;font-size:13px}table.t th,table.t td{padding:5px 4px;border-bottom:1px solid var(--bd);text-align:center}table.t th:first-child,table.t td:first-child{text-align:left}
+table.t input,.sm{width:62px;padding:4px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--tx);font-size:13px}
+.res{display:block;width:100%;text-align:left;margin-top:6px}.sb.on{outline:2px solid var(--ac)}
+</style></head><body><main>
+<h1>🧪 QA Agent Workbench</h1>
+<p class="sub">Small agents for daily QA chores. AI drafts, you decide.</p>
+<div class="stats">
+<div class="stat"><b id="sRuns">0</b><span>Runs</span></div>
+<div class="stat"><b id="sApp">–</b><span>Approved</span></div>
+<div class="stat"><b id="sRate">–</b><span>Avg rating</span></div>
+<div class="stat"><b id="sMin">0</b><span>Hrs saved</span></div>
+</div>
+<details class="card" id="cfg"><summary><b>⚙ AI provider:</b> <span id="provLbl"></span></summary>
+<div class="lbl">Provider</div><select class="t" id="prov"><option value="claude">Claude (Anthropic)</option><option value="copilot">GitHub Copilot (GitHub Models)</option><option value="custom">Custom LLM (OpenAI-compatible)</option></select>
+<div id="fUrl"><div class="lbl">Base URL</div><input class="t" id="url"></div>
+<div class="lbl">Model</div><input class="t" id="model">
+<div class="lbl">API key / token</div><input class="t" id="key" type="password" autocomplete="off">
+<div class="hint" id="provHelp" style="margin-top:6px"></div>
+<div class="row"><button class="b" id="saveCfg">Save</button><button class="b g" id="testCfg">Save &amp; test</button><span class="hint" id="cfgMsg"></span></div></details>
+<details class="card" id="atlCfg"><summary><b>🔗 Jira &amp; Confluence</b> <span id="atlLbl" class="hint"></span></summary>
+<div class="lbl">Jira URL</div><input class="t" id="aJ" placeholder="https://yourcompany.atlassian.net">
+<div class="lbl">Confluence URL (blank = Jira URL + /wiki on Atlassian Cloud)</div><input class="t" id="aC" placeholder="https://yourcompany.atlassian.net/wiki">
+<div class="lbl">Authentication</div><select class="t" id="aT"><option value="basic">Cloud: email + API token</option><option value="bearer">Server / Data Center: personal access token</option></select>
+<div id="aEw"><div class="lbl">Email</div><input class="t" id="aE"></div>
+<div class="lbl">API token</div><input class="t" id="aK" type="password" autocomplete="off">
+<div class="hint" style="margin-top:6px">Cloud tokens: id.atlassian.com → Security → API tokens. The app only reads, but a classic token carries your full permissions, so a least-privilege account is safer. Stored encrypted in your OS keychain.</div>
+<div class="row"><button class="b" id="aSave">Save</button><button class="b g" id="aTest">Save &amp; test</button><span class="hint" id="aMsg"></span></div></details>
+<details class="card" id="impact"><summary><b>📊 Impact &amp; savings</b></summary>
+<div class="g2" id="tiles"></div>
+<div class="row"><span class="hint">Hourly cost</span><input class="sm" id="cur" maxlength="3"><input class="sm" id="rate" type="number" min="0"><span class="hint">per hour</span></div>
+<div class="lbl">By agent (edit manual minutes to match your team)</div>
+<div class="tw"><table class="t" id="perAgent"></table></div>
+<div class="lbl">Traceability (approved runs by source)</div>
+<div class="tw"><table class="t" id="trace"></table></div><div class="hint" id="traceEmpty">Load a Jira story or Confluence page and approve a run to see it here.</div>
+<div class="row"><button class="b g" id="expTrace">Export traceability (CSV)</button></div>
+<div class="row"><button class="b g" id="expCsv">Export run log (CSV)</button><button class="b g" id="resetM">Reset metrics</button></div></details>
+<div class="chips" id="chips"></div>
+<div class="card">
+<div id="desc" class="hint"></div>
+<div class="steps" id="steps"></div>
+<div class="lbl" id="inLbl">1 · Input</div>
+<div class="row" style="margin:0 0 8px"><span class="hint">Load from:</span><button class="b g sb" data-src="jira">Jira</button><button class="b g sb" data-src="conf">Confluence</button><button class="b g" id="impFile">Import file</button><button class="b g" id="clrInp">Clear input</button></div>
+<div id="pJira" class="srcp hide">
+<div class="row"><input class="t" id="jKey" placeholder="Story key, e.g. PROJ-123" style="flex:1;min-width:150px"><button class="b" id="jGet">Fetch story</button></div>
+<div class="row"><input class="t" id="jProj" placeholder="Project key" style="flex:1;min-width:90px"><input class="t" id="jTxt" placeholder="Search text (optional)" style="flex:2;min-width:130px"><button class="b g" id="jFind">Find stories</button></div>
+<div class="row"><select class="t" id="jTpl" style="flex:1;min-width:120px"><option value="">JQL templates…</option><option value="sprint">Open sprint</option><option value="bugs">Open bugs</option><option value="week">Updated in last 7 days</option><option value="ver">Fix version (edit)</option></select></div>
+<div class="row"><input class="t" id="jql" placeholder="JQL, e.g. project = PROJ AND sprint in openSprints()" style="flex:1;min-width:200px"><button class="b g" id="jAll">Load all (max 50)</button></div>
+<label class="hint"><input type="checkbox" id="jCom"> Include comments</label><div id="jRes"></div></div>
+<div id="pConf" class="srcp hide">
+<div class="row"><input class="t" id="cQ" placeholder="Search Confluence, e.g. checkout requirements" style="flex:2;min-width:150px"><input class="t" id="cSp" placeholder="Space key (optional)" style="flex:1;min-width:90px"><button class="b" id="cFind">Search</button></div>
+<div id="cRes"></div></div>
+<div class="hint" id="srcMsg"></div>
+<textarea id="inp"></textarea>
+<div class="row"><button class="b" id="run">Run agent</button><button class="b g" id="demo">Load example</button><label class="hint"><input type="checkbox" id="redact" checked> Mask emails, tokens, cards, IPs before sending</label><span class="hint" id="status"></span></div>
+<div id="lessonsBox" class="hide"><div class="lbl">Learned from your feedback (applied to the next run)</div><div id="lessons"></div></div>
+
+<details id="pe" style="margin-top:10px"><summary class="hint">Agent instructions (editable, shareable)</summary>
+<textarea id="peTxt" style="min-height:120px"></textarea>
+<div class="row"><button class="b g" id="peSave">Save for this agent</button><button class="b g" id="peReset">Reset</button><button class="b g" id="peExp">Export all</button><button class="b g" id="peImp">Import</button><span class="hint" id="peMsg"></span></div></details>
+<div id="rev" class="hide">
+<div class="lbl">2 · Human review — edit freely, then approve or reject</div>
+<textarea id="out" style="min-height:260px"></textarea>
+<div class="warn">AI output can look right and still check the wrong business behaviour. You own accuracy, risk and the final call.</div>
+<div class="row"><button class="b ok" id="appr">✓ Approve</button><button class="b no" id="rej">✕ Reject</button></div>
+</div>
+
+<div id="exe" class="hide">
+<div class="lbl">3 · Execution — use the approved result</div>
+<div class="row"><button class="b" id="copy">Copy</button><button class="b g" id="dl">Download .md</button><span class="hint" id="exMsg"></span></div>
+<div class="lbl">Send to Jira (asks you to confirm)</div>
+<div class="row"><input class="t" id="jTarget" placeholder="Issue key, e.g. PROJ-123" style="flex:1;min-width:140px"><button class="b" id="jPost">Post as comment</button></div>
+<div class="row"><select class="t" id="jType" style="flex:1;min-width:100px"><option>Bug</option><option>Task</option><option>Story</option><option>Sub-task</option></select><input class="t" id="jSum" placeholder="Title (default: first line)" style="flex:2;min-width:150px"><button class="b g" id="jCreate">Create issue</button></div>
+<div class="hint">Needs a token with write permission. Create uses the project key from the Jira panel, or the target key's project. A sub-task uses the target key as its parent.</div>
+<div class="lbl">Export test cases</div>
+<div class="row"><select class="t" id="tFmt" style="flex:1"><option value="testrail">TestRail CSV</option><option value="xray">Xray CSV</option><option value="zephyr">Zephyr Scale CSV</option></select><button class="b g" id="tExp">Export test cases (CSV)</button></div>
+</div>
+
+<div id="fb" class="hide">
+<div class="lbl">4 · Feedback → 5 · Improvement</div>
+<div class="row" id="stars"></div>
+<div style="margin-top:8px"><input class="t" id="note" placeholder="What should the agent do differently next time? (optional)"></div>
+<div class="row"><button class="b" id="sendFb">Save feedback</button><span class="hint" id="fbMsg"></span></div>
+</div>
+</div>
+<p class="hint">Data (lessons, stats) stays in this browser only. Savings per approved run = the manual minutes you set for that agent (📊 Impact) minus your review time (counted as at least 2 min). Rejected runs save nothing.</p>
+</main>
+<script src="lib.js"></script><script src="renderer.js"></script></body></html>

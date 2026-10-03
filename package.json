@@ -1,0 +1,14 @@
+{
+  "name": "qa-agent-desktop",
+  "version": "1.0.0",
+  "description": "QA Agent Workbench - AI agents for QA with Claude, GitHub Copilot/Models, or any custom LLM",
+  "main": "main.js",
+  "scripts": { "start": "electron .", "dist": "electron-builder" },
+  "devDependencies": { "electron": "^33.0.0", "electron-builder": "^25.0.0" },
+  "build": {
+    "appId": "com.example.qaagent",
+    "productName": "QA Agent Workbench",
+    "files": ["main.js", "preload.js", "index.html", "renderer.js", "lib.js"],
+    "win": { "target": "nsis" }, "mac": { "target": "dmg" }, "linux": { "target": "AppImage" }
+  }
+}
